@@ -32,10 +32,11 @@ export class APIClient {
     return `${baseUrl}${endpoint}`;
   }
 
-  async _getResponseErrors(response: Response) {
+  async _getResponseErrors(response: Response): Promise<string> {
     try {
       const data = await response.json();
-      return getErrorFromResponseData(data);
+      const errorMessage = getErrorFromResponseData(data);
+      return errorMessage || getStatusCodeErrorMessage(response.status);
     } catch (error) {
       return getStatusCodeErrorMessage(response.status);
     }
