@@ -25,8 +25,10 @@ import { getHttpErrorMessage } from "@/lib/http";
 import { useVideoInfo } from "@/services/api/queries";
 
 const formSchema = z.object({
-  postUrls: z.string(),
-}).transform((data) => ({
+  postUrls: z.string()
+});
+
+const transformSchema = formSchema.transform((data) => ({
   postUrls: data.postUrls.split('\n')
     .map(url => url.trim())
     .filter(url => url.length > 0)
@@ -49,13 +51,8 @@ const formSchema = z.object({
   message: "Please provide 1-10 valid URLs",
 });
 
-type FormInput = {
-  postUrls: string;
-};
-
-type FormOutput = {
-  postUrls: string[];
-};
+type FormInput = z.infer<typeof formSchema>;
+type FormOutput = z.infer<typeof transformSchema>;
 
 export function InstagramVideoForm() {
   const form = useForm<FormInput>({
@@ -71,9 +68,10 @@ export function InstagramVideoForm() {
   const httpError = getHttpErrorMessage(error);
 
   async function onSubmit(values: FormInput) {
-    const transformed = formSchema.parse(values);
-    const { postUrls } = transformed;
     try {
+      const transformed = transformSchema.parse(values);
+      const { postUrls } = transformed;
+      
       setDownloadProgress(0);
       const total = postUrls.length;
       
