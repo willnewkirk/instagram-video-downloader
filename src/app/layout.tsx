@@ -18,6 +18,7 @@ const fontSans = FontSans({
 export const metadata: Metadata = {
   title: "Instagram Video Downloader",
   description: "Download Instagram Videos",
+  viewport: "width=device-width, initial-scale=1, maximum-scale=1",
 };
 
 export default function RootLayout({
@@ -41,7 +42,7 @@ export default function RootLayout({
         >
           <ReactQueryProvider>
             <Navbar />
-            <main className="relative h-[calc(100vh-6rem)] overflow-y-auto px-2 sm:px-4">
+            <main className="relative min-h-[calc(100vh-6rem)] overflow-y-auto px-2 pb-8 pt-4 sm:px-4">
               {children}
             </main>
             <Footer />

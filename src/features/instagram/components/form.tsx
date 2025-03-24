@@ -105,12 +105,12 @@ export function InstagramVideoForm() {
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="bg-accent/20 my-4 flex w-full max-w-2xl flex-col items-center rounded-lg border px-4 pb-16 pt-8 shadow-md sm:px-8"
+        className="bg-accent/20 mx-auto my-4 flex w-full max-w-2xl flex-col items-center rounded-lg border px-3 pb-12 pt-6 shadow-md sm:px-8"
       >
         <div className="mb-2 h-6 w-full px-2 text-start text-red-500">
           {httpError}
         </div>
-        <div className="relative mb-6 flex w-full flex-col items-center gap-4 sm:flex-row">
+        <div className="relative mb-6 flex w-full flex-col items-center gap-4">
           <FormField
             control={form.control}
             name="postUrls"
@@ -120,7 +120,7 @@ export function InstagramVideoForm() {
                   <textarea
                     disabled={isPending}
                     placeholder="Paste your Instagram links here (one per line, max 10)..."
-                    className="h-32 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:pr-28"
+                    className="h-32 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     {...field}
                   />
                 </FormControl>
@@ -131,7 +131,7 @@ export function InstagramVideoForm() {
           <Button
             disabled={isPending}
             type="submit"
-            className="right-1 top-1 w-full sm:absolute sm:w-fit"
+            className="w-full sm:w-auto"
           >
             {isPending ? (
               <Loader2 className="mr-2 animate-spin" />
@@ -141,17 +141,16 @@ export function InstagramVideoForm() {
             {downloadProgress > 0 ? `Downloading ${Math.round(downloadProgress)}%` : 'Download All'}
           </Button>
         </div>
-        {downloadProgress > 0 && (
-          <div className="w-full max-w-md">
-            <div className="h-2 w-full rounded-full bg-gray-200">
-              <div
-                className="h-2 rounded-full bg-primary transition-all duration-300"
-                style={{ width: `${downloadProgress}%` }}
-              />
-            </div>
+        
+        <div className="w-full max-w-md">
+          <div className="h-2 w-full rounded-full bg-gray-200">
+            <div
+              className="h-2 rounded-full bg-primary transition-all duration-300"
+              style={{ width: `${downloadProgress}%` }}
+            />
           </div>
-        )}
-        <p className="text-muted-foreground text-center text-xs mt-4">
+        </div>
+        <p className="mt-4 text-center text-xs text-muted-foreground">
           Videos will download directly to your device.
         </p>
       </form>
