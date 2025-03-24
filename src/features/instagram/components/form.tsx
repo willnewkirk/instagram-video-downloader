@@ -25,31 +25,40 @@ import { getHttpErrorMessage } from "@/lib/http";
 import { useVideoInfo } from "@/services/api/queries";
 
 const formSchema = z.object({
-  postUrls: z.string().transform((str) => {
-    const urls = str.split('\n').map(url => url.trim()).filter(url => url.length > 0);
-    if (urls.length === 0) {
-      throw new Error("Please provide at least one Instagram link");
+  postUrls: z.string(),
+}).transform((data) => ({
+  postUrls: data.postUrls.split('\n')
+    .map(url => url.trim())
+    .filter(url => url.length > 0)
+})).refine((data) => {
+  if (data.postUrls.length === 0) {
+    return false;
+  }
+  if (data.postUrls.length > 10) {
+    return false;
+  }
+  return data.postUrls.every(url => {
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
     }
-    if (urls.length > 10) {
-      throw new Error("Maximum 10 links allowed");
-    }
-    return urls;
-  }).refine((urls) => {
-    return urls.every(url => {
-      try {
-        new URL(url);
-        return true;
-      } catch {
-        return false;
-      }
-    });
-  }, {
-    message: "All links must be valid URLs",
-  }),
+  });
+}, {
+  message: "Please provide 1-10 valid URLs",
 });
 
+type FormInput = {
+  postUrls: string;
+};
+
+type FormOutput = {
+  postUrls: string[];
+};
+
 export function InstagramVideoForm() {
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormInput>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       postUrls: "",
@@ -61,8 +70,9 @@ export function InstagramVideoForm() {
 
   const httpError = getHttpErrorMessage(error);
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    const { postUrls } = values;
+  async function onSubmit(values: FormInput) {
+    const transformed = formSchema.parse(values);
+    const { postUrls } = transformed;
     try {
       setDownloadProgress(0);
       const total = postUrls.length;
