@@ -79,14 +79,25 @@ export function InstagramVideoForm() {
       
       for (let i = 0; i < postUrls.length; i++) {
         const postUrl = postUrls[i];
-        console.log("getting video info", postUrl);
-        const videoInfo = await getVideoInfo({ postUrl });
-        const { filename, videoUrl } = videoInfo;
-        await downloadFile(videoUrl, { filename });
-        setDownloadProgress(((i + 1) / total) * 100);
+        console.log("Processing video:", postUrl);
+        try {
+          const videoInfo = await getVideoInfo({ postUrl });
+          console.log("Video info received:", videoInfo);
+          const { filename, videoUrl } = videoInfo;
+          await downloadFile(videoUrl, { filename });
+          setDownloadProgress(((i + 1) / total) * 100);
+        } catch (error: any) {
+          console.error("Error processing video:", postUrl, error);
+          // Continue with next URL even if one fails
+          continue;
+        }
       }
     } catch (error: any) {
-      console.log(error);
+      console.error("Form submission error:", error);
+      form.setError("postUrls", {
+        type: "manual",
+        message: error.message || "Failed to process videos. Please try again.",
+      });
     } finally {
       setDownloadProgress(0);
     }

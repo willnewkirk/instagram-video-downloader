@@ -5,6 +5,22 @@ import { encodeGraphqlRequestData } from "@/features/instagram/utils";
 
 import { InstagramEndpoints } from "./constants";
 
+const DEFAULT_HEADERS = {
+  'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+  'accept-language': 'en-US,en;q=0.9',
+  'cache-control': 'no-cache',
+  'pragma': 'no-cache',
+  'sec-ch-ua': '"Chromium";v="122", "Not(A:Brand";v="24", "Google Chrome";v="122"',
+  'sec-ch-ua-mobile': '?0',
+  'sec-ch-ua-platform': '"Windows"',
+  'sec-fetch-dest': 'document',
+  'sec-fetch-mode': 'navigate',
+  'sec-fetch-site': 'none',
+  'sec-fetch-user': '?1',
+  'upgrade-insecure-requests': '1',
+  'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
+};
+
 export async function getPostPageHTML({
   postId,
 }: {
@@ -13,20 +29,13 @@ export async function getPostPageHTML({
   const res = await apiClient.get(`${InstagramEndpoints.GetByPost}/${postId}`, {
     baseURL: "https://www.instagram.com",
     headers: {
-      accept: "*/*",
-      host: "www.instagram.com",
-      referer: "https://www.instagram.com/",
-      DNT: "1",
-      "Sec-Fetch-Dest": "document",
-      "Sec-Fetch-Mode": "navigate",
-      "Sec-Fetch-Site": "same-origin",
-      "User-Agent":
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/117.0",
+      ...DEFAULT_HEADERS,
+      'host': 'www.instagram.com',
+      'referer': 'https://www.instagram.com/',
     },
   });
 
   const data = await res.text();
-
   return data;
 }
 
@@ -41,23 +50,17 @@ export async function getPostGraphqlData({
     baseURL: "https://www.instagram.com",
     body: encodedData,
     headers: {
-      Accept: "*/*",
-      "Accept-Language": "en-US,en;q=0.5",
-      "Content-Type": "application/x-www-form-urlencoded",
-      "X-FB-Friendly-Name": "PolarisPostActionLoadPostQueryQuery",
-      "X-CSRFToken": "RVDUooU5MYsBbS1CNN3CzVAuEP8oHB52",
-      "X-IG-App-ID": "1217981644879628",
-      "X-FB-LSD": "AVqbxe3J_YA",
-      "X-ASBD-ID": "129477",
-      "Sec-Fetch-Dest": "empty",
-      "Sec-Fetch-Mode": "cors",
-      "Sec-Fetch-Site": "same-origin",
-      "User-Agent":
-        "Mozilla/5.0 (Linux; Android 11; SAMSUNG SM-G973U) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/14.2 Chrome/87.0.4280.141 Mobile Safari/537.36",
+      ...DEFAULT_HEADERS,
+      'content-type': 'application/x-www-form-urlencoded',
+      'x-fb-friendly-name': 'PolarisPostActionLoadPostQueryQuery',
+      'x-csrftoken': 'missing',
+      'x-ig-app-id': '936619743392459',
+      'x-requested-with': 'XMLHttpRequest',
+      'origin': 'https://www.instagram.com',
+      'referer': `https://www.instagram.com/p/${postId}/`,
     },
   });
 
   const data = await res.json();
-
   return data;
 }

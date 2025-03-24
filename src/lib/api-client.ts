@@ -7,6 +7,8 @@ export type APIClientOptions = RequestInit & {
   noBaseURL?: boolean;
   authRetries?: number;
   withCredentials?: boolean;
+  retries?: number;
+  retryDelay?: number;
 };
 
 export class APIClient {
@@ -31,70 +33,59 @@ export class APIClient {
   }
 
   async _getResponseErrors(response: Response) {
-    const statusError = getStatusCodeErrorMessage(response.status);
     try {
       const data = await response.json();
-      const responseError = getErrorFromResponseData(data);
-      if (!responseError) {
-        return statusError;
-      }
-
-      return responseError;
+      return getErrorFromResponseData(data);
     } catch (error) {
-      return statusError;
+      return getStatusCodeErrorMessage(response.status);
     }
   }
 
   async fetch(url: string, options?: APIClientOptions) {
-    let response;
+    const maxRetries = options?.retries ?? 3;
+    const retryDelay = options?.retryDelay ?? 1000;
+    let lastError: Error | null = null;
 
-    try {
-      response = await fetch(url, options);
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        const response = await fetch(url, {
+          ...options,
+          credentials: options?.withCredentials ? "include" : "same-origin",
+        });
 
-      if (!response.ok) {
-        const errorMessage = await this._getResponseErrors(response);
-        throw new HTTPError(errorMessage, response.status);
+        if (!response.ok) {
+          const errorMessage = await this._getResponseErrors(response);
+          throw new HTTPError(errorMessage, response.status);
+        }
+
+        return response;
+      } catch (error: any) {
+        lastError = error;
+        if (attempt < maxRetries - 1) {
+          await new Promise(resolve => setTimeout(resolve, retryDelay * (attempt + 1)));
+          continue;
+        }
       }
-    } catch (error: any) {
-      if (error.name === "AbortError") {
-        throw new CustomError("The request was aborted by the user");
-      } else if (error.name === "SyntaxError" || error.name === "TypeError") {
-        throw new CustomError("Oops! Looks like the client is having issues");
-      }
-
-      if (error.name === "NetworkError") {
-        throw new NetworkError(
-          "Network error, check your internet connection and try again"
-        );
-      } else if (error.name === "SecurityError") {
-        throw new NetworkError(
-          "We are having issues connecting to the server. Please try again later"
-        );
-      }
-
-      if (error instanceof CustomError) {
-        throw error;
-      }
-
-      throw new CustomError("Oops! looks like something went wrong");
     }
 
-    return response;
+    if (lastError instanceof HTTPError) {
+      throw lastError;
+    }
+    
+    throw new NetworkError("Failed to fetch after multiple retries");
   }
 
   async get(endpoint: string, options?: APIClientOptions) {
-    const requestUrl = this._getRequestUrl(endpoint, options);
-
-    return this.fetch(requestUrl, {
+    const url = this._getRequestUrl(endpoint, options);
+    return this.fetch(url, {
       ...options,
       method: "GET",
     });
   }
 
   async post(endpoint: string, options?: APIClientOptions) {
-    const requestUrl = this._getRequestUrl(endpoint, options);
-
-    return this.fetch(requestUrl, {
+    const url = this._getRequestUrl(endpoint, options);
+    return this.fetch(url, {
       ...options,
       method: "POST",
     });
